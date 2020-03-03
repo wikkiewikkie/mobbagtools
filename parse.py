@@ -130,16 +130,25 @@ class Message(object):
         msg.attach(part)
 
         for attach in self.attachments:
-            p = MIMEBase(attach.mime_type.split("/")[0], attach.mime_type.split("/")[1])
-            p.set_payload(attach.get_data()) 
+            try:
+                try:
+                    p = MIMEBase(attach.mime_type.split("/")[0], attach.mime_type.split("/")[1])
+                except IndexError:
+                    # handle edge cases where mime type is unspecified
+                    p = MIMEBase("application", "octet-stream")
+                    print("Mime Type Unspecified", self._id)
+                p.set_payload(attach.get_data()) 
   
-            # encode into base64 
-            encoders.encode_base64(p) 
+                # encode into base64 
+                encoders.encode_base64(p) 
    
-            p.add_header('Content-Disposition', "attachment; filename=%s" % attach.name) 
+                p.add_header('Content-Disposition', "attachment; filename=%s" % attach.name) 
   
-            # attach the instance 'p' to instance 'msg' 
-            msg.attach(p) 
+                # attach the instance 'p' to instance 'msg' 
+                msg.attach(p)
+            except TypeError:
+                # handle edge cases where attachment file is not found in file store
+                print("Attachment not found", self._id
         
         with open(path, "w", encoding="utf8") as eml_file:
             gen = generator.Generator(eml_file)
